@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 create table if not exists bank_accounts(
     userID uuid primary key,
-    balance 
+    balance integer
 );
 
 create table if not exists transactions(
