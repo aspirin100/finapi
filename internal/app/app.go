@@ -3,39 +3,34 @@ package app
 import (
 	"context"
 	"fmt"
-	"net/http"
-
-	"github.com/gin-gonic/gin"
 
 	"github.com/aspirin100/finapi/internal/config"
+	"github.com/aspirin100/finapi/internal/handler"
+	"github.com/aspirin100/finapi/internal/repository"
+	"github.com/aspirin100/finapi/internal/service"
 )
 
 type App struct {
-	server *http.Server
+	requestHandler *handler.Handler
 }
 
-func New(cfg *config.Config) *App {
-	router := gin.Default()
-
-	// TODO: storage constructor for service layer
-
-	// TODO: service layer constructor
-	// ...New(storage)
-
-	// TODO: handler constructor
-
-	srv := &http.Server{
-		Addr:    cfg.Hostname + ":" + cfg.Port,
-		Handler: router,
+func New(ctx context.Context, cfg *config.Config) (*App, error) {
+	repo, err := repository.NewConnection(ctx, cfg.PostgresDSN)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create app instance: %w", err)
 	}
+
+	srvc := service.New(repo)
+
+	requestHandler := handler.New(cfg.Hostname, cfg.Port, srvc)
 
 	return &App{
-		server: srv,
-	}
+		requestHandler: requestHandler,
+	}, nil
 }
 
 func (app *App) Run() error {
-	err := app.server.ListenAndServe()
+	err := app.requestHandler.Server.ListenAndServe()
 	if err != nil {
 		return fmt.Errorf("failed to start application: %w", err)
 	}

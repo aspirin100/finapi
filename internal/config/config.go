@@ -9,7 +9,7 @@ import (
 type Config struct {
 	Hostname    string `env:"FINAPI_HOSTNAME" env-default:"localhost"`
 	Port        string `env:"FINAPI_PORT" env-default:"8080"`
-	PostgresDSN string `env:"FINAPI_POSTGRES_DSN" env-default:"postgres://postgres:postgres@localhost:5432/auth?sslmode=disable"`
+	PostgresDSN string `env:"FINAPI_POSTGRES_DSN" env-default:"postgres://postgres:postgres@localhost:5432/finapi?sslmode=disable"`
 }
 
 func Load() (*Config, error) {

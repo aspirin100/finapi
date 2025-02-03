@@ -1,6 +1,8 @@
 package service
 
 import (
+	"context"
+
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
@@ -8,8 +10,8 @@ import (
 )
 
 type UserManager interface {
-	UpdateBalance(userID uuid.UUID, amount decimal.Decimal) error
-	GetTransactions(userID uuid.UUID) ([]entity.Transaction, error)
+	UpdateBalance(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error
+	GetTransactions(ctx context.Context, userID uuid.UUID) ([]entity.Transaction, error)
 }
 
 type Service struct {
@@ -20,4 +22,16 @@ func New(userManager UserManager) *Service {
 	return &Service{
 		userManager: userManager,
 	}
+}
+
+func (s *Service) Deposit(userID uuid.UUID, amount decimal.Decimal) error {
+	return nil
+}
+
+func (s *Service) GetTransactions(userID uuid.UUID) error {
+	return nil
+}
+
+func (s *Service) Transfer(senderID, receiverID uuid.UUID, amount decimal.Decimal) error {
+	return nil
 }

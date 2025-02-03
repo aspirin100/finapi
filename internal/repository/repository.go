@@ -4,7 +4,11 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/shopspring/decimal"
+
+	"github.com/aspirin100/finapi/internal/entity"
 )
 
 type Repository struct {
@@ -20,4 +24,15 @@ func NewConnection(ctx context.Context, postgresDSN string) (*Repository, error)
 	return &Repository{
 		DB: conn,
 	}, nil
+}
+
+func (r *Repository) GetTransactions(ctx context.Context,
+	userID uuid.UUID) ([]entity.Transaction, error) {
+	return nil, nil
+}
+
+func (r *Repository) UpdateBalance(ctx context.Context,
+	userID uuid.UUID,
+	amount decimal.Decimal) error {
+	return nil
 }
