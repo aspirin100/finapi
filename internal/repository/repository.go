@@ -66,11 +66,6 @@ func (r *Repository) BeginTx(ctx context.Context) (context.Context, CommitOrRoll
 	}, nil
 }
 
-func (r *Repository) GetTransactions(ctx context.Context,
-	userID uuid.UUID) ([]entity.Transaction, error) {
-	return nil, nil
-}
-
 func (r *Repository) UpdateBalance(ctx context.Context,
 	userID uuid.UUID,
 	amount decimal.Decimal) error {
@@ -93,8 +88,41 @@ func (r *Repository) UpdateBalance(ctx context.Context,
 	return nil
 }
 
+func (r *Repository) SaveTransaction(ctx context.Context,
+	receiverID, senderID uuid.UUID,
+	amount decimal.Decimal) error {
+	var ex executor = r.DB
+
+	// checks if current operation is in transaction
+	tx, ok := ctx.Value(txContextKey).(*pgx.Tx)
+	if ok {
+		ex = *tx
+	}
+
+	transactionID := uuid.New()
+
+	_, err := ex.Exec(ctx,
+		NewTransactionQuery,
+		transactionID,
+		receiverID,
+		senderID,
+		amount)
+	if err != nil {
+		return fmt.Errorf("failed to save transaction: %w", err)
+	}
+
+	return nil
+}
+
+func (r *Repository) GetTransactions(ctx context.Context,
+	userID uuid.UUID) ([]entity.Transaction, error) {
+	return nil, nil
+}
+
 const (
-	UpdateBalanceQuery   = `update bank_accounts set balance = (balance + $2) where userID = $1`
+	UpdateBalanceQuery  = `update bank_accounts set balance = (balance + $2) where userID = $1`
+	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount)
+	values $1, $2, $3, $4`
 	GetTransactionsQuery = `select (id, receiverID, senderID, amount, createdAt)
 	from transactions
 	where receiverID = $1 OR senderID = $1`

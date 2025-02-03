@@ -12,6 +12,7 @@ import (
 type UserManager interface {
 	UpdateBalance(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error
 	GetTransactions(ctx context.Context, userID uuid.UUID) ([]entity.Transaction, error)
+	SaveTransaction(ctx context.Context, senderID, receiverID uuid.UUID, amount decimal.Decimal) error
 }
 
 type Service struct {
