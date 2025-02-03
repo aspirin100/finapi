@@ -14,8 +14,9 @@ import (
 )
 
 var (
-	ErrInvalidFormat = errors.New("invalid user id format")
-	ErrEmptyRequest  = errors.New("request body is required")
+	ErrInvalidFormat  = errors.New("invalid user id format")
+	ErrEmptyRequest   = errors.New("request body is required")
+	ErrNegativeAmount = errors.New("deposit amount must be positive")
 )
 
 type depositRequestParams struct {
@@ -65,6 +66,8 @@ func (h *Handler) Deposit(ctx *gin.Context) {
 		switch {
 		case errors.Is(err, ErrInvalidFormat):
 			ctx.String(http.StatusBadRequest, "wrong user id format")
+		case errors.Is(err, ErrNegativeAmount):
+			ctx.String(http.StatusBadRequest, "amount must be positive")
 		case errors.Is(err, ErrEmptyRequest):
 			ctx.String(http.StatusBadRequest, "request body is required")
 		default:
@@ -106,6 +109,10 @@ func validateDepositRequest(
 	err = decoder.Decode(&params)
 	if err != nil {
 		return nil, fmt.Errorf("failed to unmarshal request body: %w", err)
+	}
+
+	if decimal.Zero.Compare(params.Amount) >= 0 {
+		return nil, ErrNegativeAmount
 	}
 
 	params.UserID = useridParsed

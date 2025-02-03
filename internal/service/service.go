@@ -3,11 +3,13 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 
 	"github.com/aspirin100/finapi/internal/entity"
+	"github.com/aspirin100/finapi/internal/repository"
 )
 
 var (
@@ -32,6 +34,16 @@ func New(userManager UserManager) *Service {
 }
 
 func (s *Service) Deposit(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error {
+	err := s.userManager.UpdateBalance(ctx, userID, amount)
+	if err != nil {
+		switch {
+		case errors.Is(err, repository.ErrUserNotFound):
+			return ErrUserNotFound
+		default:
+			return fmt.Errorf("failed to update balance: %w", err)
+		}
+	}
+
 	return nil
 }
 
