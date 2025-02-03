@@ -15,7 +15,6 @@ import (
 
 var (
 	ErrInvalidFormat  = errors.New("invalid user id format")
-	ErrEmptyRequest   = errors.New("request body is required")
 	ErrNegativeAmount = errors.New("deposit amount must be positive")
 )
 
@@ -67,18 +66,9 @@ func (h *Handler) GetUserTransactions(ctx *gin.Context) {
 }
 
 func (h *Handler) Deposit(ctx *gin.Context) {
-	params, err := validateDepositRequest(ctx.GetString("userID"), ctx.Request)
+	params, err := validateDepositRequest(ctx.Param("userID"), ctx.Request)
 	if err != nil {
-		switch {
-		case errors.Is(err, ErrInvalidFormat):
-			ctx.String(http.StatusBadRequest, "wrong user id format")
-		case errors.Is(err, ErrNegativeAmount):
-			ctx.String(http.StatusBadRequest, "amount must be positive")
-		case errors.Is(err, ErrEmptyRequest):
-			ctx.String(http.StatusBadRequest, "request body is required")
-		default:
-			ctx.Status(http.StatusInternalServerError)
-		}
+		responseOnValidationErr(ctx, err)
 	}
 
 	err = h.tmanager.Deposit(ctx, params.UserID, params.Amount)
@@ -97,7 +87,12 @@ func (h *Handler) Deposit(ctx *gin.Context) {
 }
 
 func (h *Handler) TransferMoney(ctx *gin.Context) {
+	params, err := validateTransferRequest(ctx.Param("userID"), ctx.Request)
+	if err != nil {
+		responseOnValidationErr(ctx, err)
+	}
 
+	_ = params
 }
 
 func validateDepositRequest(
@@ -157,4 +152,15 @@ func validateTransferRequest(
 		ReceiverID: receiverIDParsed,
 		Amount:     params.Amount,
 	}, nil
+}
+
+func responseOnValidationErr(ctx *gin.Context, err error) {
+	switch {
+	case errors.Is(err, ErrInvalidFormat):
+		ctx.String(http.StatusBadRequest, "wrong user id format")
+	case errors.Is(err, ErrNegativeAmount):
+		ctx.String(http.StatusBadRequest, "amount must be positive")
+	default:
+		ctx.Status(http.StatusInternalServerError)
+	}
 }
