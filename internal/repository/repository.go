@@ -108,6 +108,12 @@ func (r *Repository) SaveTransaction(ctx context.Context,
 		senderID,
 		amount)
 	if err != nil {
+		var pgErr *pgconn.PgError
+
+		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+			return ErrUserNotFound
+		}
+
 		return fmt.Errorf("failed to save transaction: %w", err)
 	}
 
@@ -122,7 +128,7 @@ func (r *Repository) GetTransactions(ctx context.Context,
 const (
 	UpdateBalanceQuery  = `update bank_accounts set balance = (balance + $2) where userID = $1`
 	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount)
-	values $1, $2, $3, $4`
+	values ($1, $2, $3, $4)`
 	GetTransactionsQuery = `select (id, receiverID, senderID, amount, createdAt)
 	from transactions
 	where receiverID = $1 OR senderID = $1`

@@ -12,6 +12,14 @@ create table if not exists transactions(
     amount decimal not null,
     createdAt timestamptz default NOW()
 );
+
+alter table transactions
+    add constraint fk_receiver_id
+    foreign key (receiverID) references bank_accounts(userID);
+
+alter table transactions
+    add constraint fk_sender_id
+    foreign key (senderID) references bank_accounts(userID);
 -- +goose StatementEnd
 
 -- +goose Down

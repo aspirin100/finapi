@@ -14,3 +14,6 @@ goose-up:
 	go run github.com/pressly/goose/v3/cmd/goose@latest \
 	-dir ./internal/repository/migrations postgres $(POSTGRES_DSN) up
 
+goose-down:
+	go run github.com/pressly/goose/v3/cmd/goose@latest \
+	-dir ./internal/repository/migrations postgres $(POSTGRES_DSN) down
