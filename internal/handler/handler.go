@@ -24,6 +24,12 @@ type depositRequestParams struct {
 	Amount decimal.Decimal `json:"amount"`
 }
 
+type transferRequestParams struct {
+	SenderID   uuid.UUID       `json:"omitempty"`
+	ReceiverID uuid.UUID       `json:"receiverID"`
+	Amount     decimal.Decimal `json:"amount"`
+}
+
 type TransactionManager interface {
 	Deposit(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error
 	GetTransactions(ctx context.Context, userID uuid.UUID) error
@@ -118,4 +124,37 @@ func validateDepositRequest(
 	params.UserID = useridParsed
 
 	return &params, nil
+}
+
+func validateTransferRequest(
+	userID string,
+	req *http.Request) (*transferRequestParams, error) {
+	senderIDParsed, err := uuid.Parse(userID)
+	if err != nil {
+		return nil, ErrInvalidFormat
+	}
+
+	var params transferRequestParams
+
+	decoder := json.NewDecoder(req.Body)
+
+	err = decoder.Decode(&params)
+	if err != nil {
+		return nil, fmt.Errorf("failed to unmarshal request body: %w", err)
+	}
+
+	receiverIDParsed, err := uuid.Parse(params.ReceiverID.String())
+	if err != nil {
+		return nil, ErrInvalidFormat
+	}
+
+	if decimal.Zero.Compare(params.Amount) >= 0 {
+		return nil, ErrNegativeAmount
+	}
+
+	return &transferRequestParams{
+		SenderID:   senderIDParsed,
+		ReceiverID: receiverIDParsed,
+		Amount:     params.Amount,
+	}, nil
 }
