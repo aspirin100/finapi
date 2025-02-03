@@ -2,7 +2,7 @@
 -- +goose StatementBegin
 create table if not exists bank_accounts(
     userID uuid primary key,
-    balance decimal
+    balance decimal check(balance >= 0)
 );
 
 create table if not exists transactions(
@@ -24,6 +24,6 @@ alter table transactions
 
 -- +goose Down
 -- +goose StatementBegin
-drop table if exists bank_accounts;
 drop table if exists transactions;
+drop table if exists bank_accounts;
 -- +goose StatementEnd

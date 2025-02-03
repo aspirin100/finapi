@@ -6,5 +6,6 @@ insert into bank_accounts(userID, balance) values ('4178f61f-2ff9-4ab5-afa5-f30d
 
 -- +goose Down
 -- +goose StatementBegin
+delete from transactions;
 delete from bank_accounts; 
 -- +goose StatementEnd

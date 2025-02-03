@@ -14,7 +14,8 @@ import (
 )
 
 var (
-	ErrUserNotFound = errors.New("user not found")
+	ErrUserNotFound    = errors.New("user not found")
+	ErrNegativeBalance = errors.New("not enough money on balance")
 )
 
 type Repository struct {
@@ -80,7 +81,14 @@ func (r *Repository) UpdateBalance(ctx context.Context,
 	comm, err := ex.Exec(ctx,
 		UpdateBalanceQuery, userID, amount)
 	if err != nil {
-		return fmt.Errorf("failed to update user's balance: %w", err)
+		var pgErr *pgconn.PgError
+
+		switch {
+		case errors.As(err, &pgErr) && pgErr.Code == "23514":
+			return ErrNegativeBalance
+		default:
+			return fmt.Errorf("failed to update user's balance: %w", err)
+		}
 	} else if comm.RowsAffected() == 0 {
 		return ErrUserNotFound
 	}
@@ -110,11 +118,12 @@ func (r *Repository) SaveTransaction(ctx context.Context,
 	if err != nil {
 		var pgErr *pgconn.PgError
 
-		if errors.As(err, &pgErr) && pgErr.Code == "23503" {
+		switch {
+		case errors.As(err, &pgErr) && pgErr.Code == "23503":
 			return ErrUserNotFound
+		default:
+			return fmt.Errorf("failed to save transaction: %w", err)
 		}
-
-		return fmt.Errorf("failed to save transaction: %w", err)
 	}
 
 	return nil

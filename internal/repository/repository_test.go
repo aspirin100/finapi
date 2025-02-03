@@ -54,6 +54,14 @@ func TestUpdateBalance(t *testing.T) {
 				Amount: decimal.NewFromFloat(1111),
 			},
 		},
+		{
+			Name:        "not enough money case",
+			ExpectedErr: ErrNegativeBalance,
+			Request: Params{
+				UserID: uuid.MustParse(UserIDs[0]),
+				Amount: decimal.NewFromFloat(-100000),
+			},
+		},
 	}
 
 	for _, tcase := range cases {
