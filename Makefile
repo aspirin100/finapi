@@ -2,7 +2,7 @@ POSTGRES_DSN := "postgres://postgres:postgres@localhost:5432/finapi?sslmode=disa
 
 .PHONY: run
 run:
-	make run ./cmd/server/main.go
+	go run ./cmd/server/main.go
 
 DEFAULT_GOAL: run
 

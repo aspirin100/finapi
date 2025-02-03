@@ -2,14 +2,14 @@
 -- +goose StatementBegin
 create table if not exists bank_accounts(
     userID uuid primary key,
-    balance integer
+    balance decimal
 );
 
 create table if not exists transactions(
     id uuid primary key,
     receiverID uuid not null,
     senderID uuid not null,
-    amount integer not null
+    amount decimal not null
 );
 -- +goose StatementEnd
 
