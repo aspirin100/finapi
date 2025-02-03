@@ -32,7 +32,7 @@ type transferRequestParams struct {
 type TransactionManager interface {
 	Deposit(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error
 	GetTransactions(ctx context.Context, userID uuid.UUID) error
-	Transfer(ctx context.Context, senderID, receiverID uuid.UUID, amount decimal.Decimal) error
+	Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) error
 }
 
 type Handler struct {
@@ -92,7 +92,21 @@ func (h *Handler) TransferMoney(ctx *gin.Context) {
 		responseOnValidationErr(ctx, err)
 	}
 
-	_ = params
+	err = h.tmanager.Transfer(
+		ctx,
+		params.ReceiverID,
+		params.SenderID,
+		params.Amount)
+	if err != nil {
+		switch {
+		case errors.Is(err, service.ErrUserNotFound):
+			ctx.String(http.StatusNotFound, "user not found")
+		default:
+			ctx.Status(http.StatusInternalServerError)
+		}
+	}
+
+	ctx.Status(http.StatusOK)
 }
 
 func validateDepositRequest(

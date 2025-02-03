@@ -51,6 +51,6 @@ func (s *Service) GetTransactions(ctx context.Context, userID uuid.UUID) error {
 	return nil
 }
 
-func (s *Service) Transfer(ctx context.Context, senderID, receiverID uuid.UUID, amount decimal.Decimal) error {
+func (s *Service) Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) error {
 	return nil
 }
