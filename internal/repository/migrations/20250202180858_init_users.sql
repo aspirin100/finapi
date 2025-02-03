@@ -9,7 +9,8 @@ create table if not exists transactions(
     id uuid primary key,
     receiverID uuid not null,
     senderID uuid not null,
-    amount decimal not null
+    amount decimal not null,
+    createdAt timestamptz default NOW()
 );
 -- +goose StatementEnd
 

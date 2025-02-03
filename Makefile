@@ -8,7 +8,7 @@ DEFAULT_GOAL: run
 
 goose-create:
 	go run github.com/pressly/goose/v3/cmd/goose@latest \
-	-dir ./internal/repository/migrations create init_users postgres 
+	-dir ./internal/repository/migrations create test_users_add postgres 
 
 goose-up:
 	go run github.com/pressly/goose/v3/cmd/goose@latest \
