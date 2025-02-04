@@ -37,14 +37,20 @@ func New(userManager UserManager) *Service {
 func (s *Service) Deposit(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error {
 	err := s.userManager.UpdateBalance(ctx, userID, amount)
 	if err != nil {
-		responseOnRepoError(err)
+		return responseOnRepoError(err)
 	}
 
 	return nil
 }
 
-func (s *Service) GetTransactions(ctx context.Context, userID uuid.UUID) error {
-	return nil
+func (s *Service) GetTransactions(ctx context.Context,
+	userID uuid.UUID) ([]entity.Transaction, error) {
+	transactions, err := s.userManager.GetTransactions(ctx, userID)
+	if err != nil {
+		return nil, responseOnRepoError(err)
+	}
+
+	return transactions, nil
 }
 
 func (s *Service) Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) error {

@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/aspirin100/finapi/internal/entity"
 	"github.com/aspirin100/finapi/internal/service"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -31,7 +32,7 @@ type transferRequestParams struct {
 
 type TransactionManager interface {
 	Deposit(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error
-	GetTransactions(ctx context.Context, userID uuid.UUID) error
+	GetTransactions(ctx context.Context, userID uuid.UUID) ([]entity.Transaction, error)
 	Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) error
 }
 

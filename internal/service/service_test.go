@@ -139,3 +139,34 @@ func TestTransfer(t *testing.T) {
 		})
 	}
 }
+
+func TestGetTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	srvc, err := initService()
+	if err != nil {
+		log.Print(err)
+		t.Fail()
+	}
+
+	cases := []struct {
+		Name        string
+		ExpectedErr error
+		UserID      uuid.UUID
+	}{
+		{
+			Name:        "ok case",
+			ExpectedErr: nil,
+			UserID:      uuid.MustParse(UserIDs[0]),
+		},
+	}
+
+	for _, tcase := range cases {
+		t.Run(tcase.Name, func(t *testing.T) {
+			result, err := srvc.GetTransactions(ctx, tcase.UserID)
+
+			require.EqualValues(t, tcase.ExpectedErr, err)
+			fmt.Println(result)
+		})
+	}
+}
