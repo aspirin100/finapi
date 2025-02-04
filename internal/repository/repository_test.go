@@ -88,6 +88,7 @@ func TestSaveTransaction(t *testing.T) {
 		ReceiverID uuid.UUID
 		SenderID   uuid.UUID
 		Amount     decimal.Decimal
+		Operation  string
 	}
 
 	cases := []struct {
@@ -102,6 +103,7 @@ func TestSaveTransaction(t *testing.T) {
 				ReceiverID: uuid.MustParse(UserIDs[0]),
 				SenderID:   uuid.MustParse(UserIDs[1]),
 				Amount:     decimal.NewFromFloat(10000),
+				Operation:  "transfer",
 			},
 		},
 		{
@@ -111,6 +113,7 @@ func TestSaveTransaction(t *testing.T) {
 				ReceiverID: uuid.Nil,
 				SenderID:   uuid.Nil,
 				Amount:     decimal.NewFromFloat(10000),
+				Operation:  "transfer",
 			},
 		},
 	}
@@ -122,7 +125,7 @@ func TestSaveTransaction(t *testing.T) {
 				tcase.Request.ReceiverID,
 				tcase.Request.SenderID,
 				tcase.Request.Amount,
-				"transfer")
+				tcase.Request.Operation)
 
 			require.EqualValues(t, tcase.ExpectedErr, err)
 		})

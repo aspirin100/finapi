@@ -158,7 +158,8 @@ func (r *Repository) SaveTransaction(ctx context.Context,
 		transactionID,
 		receiverID,
 		senderID,
-		amount)
+		amount,
+		operation)
 	if err != nil {
 		var pgErr *pgconn.PgError
 
@@ -213,8 +214,8 @@ func (r *Repository) GetTransactions(ctx context.Context,
 
 const (
 	UpdateBalanceQuery  = `update bank_accounts set balance = (balance + $2) where userID = $1 returning balance`
-	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount)
-	values ($1, $2, $3, $4)`
+	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount, operation)
+	values ($1, $2, $3, $4, $5)`
 	GetTransactionsQuery = `select id, receiverID, senderID, amount, operation, createdAt
 	from transactions
 	where receiverID = $1 OR senderID = $1`
