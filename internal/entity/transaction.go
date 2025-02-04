@@ -8,9 +8,9 @@ import (
 )
 
 type Transaction struct {
-	ID         uuid.UUID
-	SenderID   uuid.UUID
-	ReceiverID uuid.UUID
-	Amount     decimal.Decimal
-	CreatedAt  time.Time
+	ID         uuid.UUID       `json:"id"`
+	SenderID   uuid.UUID       `json:"senderID"`
+	ReceiverID uuid.UUID       `json:"receiverID"`
+	Amount     decimal.Decimal `json:"amount"`
+	CreatedAt  time.Time       `json:"createdAt"`
 }

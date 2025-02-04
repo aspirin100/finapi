@@ -64,7 +64,20 @@ func New(hostname, port string, tmanager TransactionManager) *Handler {
 }
 
 func (h *Handler) GetUserTransactions(ctx *gin.Context) {
+	userIDarsed, err := uuid.Parse(ctx.Param("userID"))
+	if err != nil {
+		ctx.String(http.StatusNotFound, "user not found")
+	}
 
+	transactions, err := h.tmanager.GetTransactions(
+		ctx,
+		userIDarsed)
+	if err != nil {
+		responseOnServiceError(ctx, err)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, transactions)
 }
 
 func (h *Handler) Deposit(ctx *gin.Context) {
@@ -75,14 +88,7 @@ func (h *Handler) Deposit(ctx *gin.Context) {
 
 	err = h.tmanager.Deposit(ctx, params.UserID, params.Amount)
 	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrUserNotFound):
-			ctx.String(http.StatusNotFound, "user not found")
-		case errors.Is(err, service.ErrNegativeBalance):
-			ctx.String(http.StatusBadRequest, "not enough money on account")
-		default:
-			ctx.Status(http.StatusInternalServerError)
-		}
+		responseOnServiceError(ctx, err)
 		return
 	}
 
@@ -101,14 +107,7 @@ func (h *Handler) TransferMoney(ctx *gin.Context) {
 		params.SenderID,
 		params.Amount)
 	if err != nil {
-		switch {
-		case errors.Is(err, service.ErrUserNotFound):
-			ctx.String(http.StatusNotFound, "user not found")
-		case errors.Is(err, service.ErrNegativeBalance):
-			ctx.String(http.StatusBadRequest, "not enough money on balance")
-		default:
-			ctx.Status(http.StatusInternalServerError)
-		}
+		responseOnServiceError(ctx, err)
 		return
 	}
 
@@ -186,6 +185,17 @@ func responseOnValidationErr(ctx *gin.Context, err error) {
 		ctx.String(http.StatusBadRequest, "amount must be positive")
 	case errors.Is(err, ErrSameUser):
 		ctx.String(http.StatusBadRequest, "can't transfer money to the same account")
+	default:
+		ctx.Status(http.StatusInternalServerError)
+	}
+}
+
+func responseOnServiceError(ctx *gin.Context, err error) {
+	switch {
+	case errors.Is(err, service.ErrUserNotFound):
+		ctx.String(http.StatusNotFound, "user not found")
+	case errors.Is(err, service.ErrNegativeBalance):
+		ctx.String(http.StatusBadRequest, "not enough money on account")
 	default:
 		ctx.Status(http.StatusInternalServerError)
 	}
