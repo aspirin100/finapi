@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"testing"
 
@@ -120,6 +121,38 @@ func TestSaveTransaction(t *testing.T) {
 				tcase.Request.ReceiverID,
 				tcase.Request.SenderID,
 				tcase.Request.Amount)
+
+			require.EqualValues(t, tcase.ExpectedErr, err)
+		})
+	}
+}
+
+func TestGetTransactions(t *testing.T) {
+	ctx := context.Background()
+
+	repo, err := NewConnection(ctx, PostgresDSN)
+	if err != nil {
+		log.Print(err)
+		t.Fail()
+	}
+
+	cases := []struct {
+		Name        string
+		ExpectedErr error
+		UserID      uuid.UUID
+	}{
+		{
+			Name:        "ok case",
+			ExpectedErr: nil,
+			UserID:      uuid.MustParse(UserIDs[0]),
+		},
+	}
+
+	for _, tcase := range cases {
+		t.Run(tcase.Name, func(t *testing.T) {
+			list, err := repo.GetTransactions(ctx, tcase.UserID)
+
+			fmt.Println(list)
 
 			require.EqualValues(t, tcase.ExpectedErr, err)
 		})

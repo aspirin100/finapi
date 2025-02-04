@@ -13,6 +13,10 @@ import (
 	"github.com/aspirin100/finapi/internal/entity"
 )
 
+const (
+	defaultTransactionsCount = 100
+)
+
 var (
 	ErrUserNotFound    = errors.New("user not found")
 	ErrNegativeBalance = errors.New("not enough money on balance")
@@ -141,11 +145,11 @@ func (r *Repository) GetTransactions(ctx context.Context,
 		return nil, fmt.Errorf("failed to get users's transactions: %w", err)
 	}
 
-	resultSize := rows.CommandTag().RowsAffected()
-
-	transactions := make([]entity.Transaction, resultSize)
+	transactions := make([]entity.Transaction, 0, defaultTransactionsCount)
 
 	for i := 0; rows.Next(); i++ {
+		transactions = append(transactions, entity.Transaction{})
+
 		rows.Scan(
 			&transactions[i].ID,
 			&transactions[i].ReceiverID,
@@ -160,14 +164,20 @@ func (r *Repository) GetTransactions(ctx context.Context,
 		return nil, fmt.Errorf("error during read transaction rows: %w", err)
 	}
 
-	return transactions, nil
+	// for memory optimization
+	result := make([]entity.Transaction, len(transactions))
+
+	copy(result, transactions)
+
+	return result, nil
 }
 
 const (
 	UpdateBalanceQuery  = `update bank_accounts set balance = (balance + $2) where userID = $1`
 	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount)
 	values ($1, $2, $3, $4)`
-	GetTransactionsQuery = `select (id, receiverID, senderID, amount, createdAt)
+	GetTransactionsQuery = `select id, receiverID, senderID, amount, createdAt
 	from transactions
 	where receiverID = $1 OR senderID = $1`
+	GetTransactionsCountQuery = `select count`
 )
