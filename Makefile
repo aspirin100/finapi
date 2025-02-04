@@ -6,6 +6,10 @@ run:
 
 DEFAULT_GOAL: run
 
+build:
+	mkdir -p bin && \
+	go build -o ./bin/finapi-server ./cmd/server/main.go
+
 goose-create:
 	go run github.com/pressly/goose/v3/cmd/goose@latest \
 	-dir ./internal/repository/migrations create test_users_add postgres 
@@ -17,3 +21,7 @@ goose-up:
 goose-down:
 	go run github.com/pressly/goose/v3/cmd/goose@latest \
 	-dir ./internal/repository/migrations postgres $(POSTGRES_DSN) down
+
+docker-run:
+	docker build -t finapi-img . && \
+	docker-compose up -d

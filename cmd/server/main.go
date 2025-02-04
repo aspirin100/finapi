@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 
 	"github.com/aspirin100/finapi/internal/app"
@@ -13,6 +14,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Println("current config:", cfg)
 
 	application, err := app.New(context.Background(), cfg)
 	if err != nil {

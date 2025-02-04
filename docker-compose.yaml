@@ -1,6 +1,7 @@
 services:
   postgres:
     image: postgres:latest
+    restart: on-failure
     ports:
      - "5432:5432"
     environment:
@@ -9,6 +10,21 @@ services:
       POSTGRES_DB: finapi
     networks:
       - finapi-local-net
+
+  finapi:
+    image: finapi-img:latest
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    depends_on:
+     - postgres
+    environment:
+      FINAPI_HOSTNAME: 0.0.0.0
+      FINAPI_PORT: 8080
+      FINAPI_POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/finapi?sslmode=disable
+    networks:
+        - finapi-local-net
+
 
 networks:
   finapi-local-net:

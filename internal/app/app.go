@@ -20,6 +20,11 @@ func New(ctx context.Context, cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to create app instance: %w", err)
 	}
 
+	err = repo.UpMigrations("postgres", cfg.PostgresDSN)
+	if err != nil {
+		return nil, fmt.Errorf("failed to up migrations: %w", err)
+	}
+
 	srvc := service.New(repo)
 
 	requestHandler := handler.New(cfg.Hostname, cfg.Port, srvc)
