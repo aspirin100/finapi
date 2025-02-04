@@ -52,14 +52,16 @@ func (r *Repository) BeginTx(ctx context.Context) (context.Context, CommitOrRoll
 
 	return context.WithValue(ctx, txContextKey, tx), func(err *error) error {
 		if *err != nil {
-			if errRollback := tx.Rollback(ctx); errRollback != nil {
+			errRollback := tx.Rollback(ctx)
+			if errRollback != nil {
 				return errors.Join(*err, errRollback)
 			}
 
 			return *err
 		}
 
-		if errCommit := tx.Commit(ctx); errCommit != nil {
+		errCommit := tx.Commit(ctx)
+		if errCommit != nil {
 			return fmt.Errorf("failed to commit transaction: %w", errCommit)
 		}
 
