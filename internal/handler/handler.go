@@ -34,7 +34,7 @@ type transferRequestParams struct {
 type TransactionManager interface {
 	Deposit(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (*decimal.Decimal, error)
 	GetTransactions(ctx context.Context, userID uuid.UUID) ([]entity.Transaction, error)
-	Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) error
+	Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) (*entity.Transaction, error)
 }
 
 type Handler struct {
@@ -107,7 +107,7 @@ func (h *Handler) TransferMoney(ctx *gin.Context) {
 		responseOnValidationErr(ctx, err)
 	}
 
-	err = h.tmanager.Transfer(
+	transaction, err := h.tmanager.Transfer(
 		ctx,
 		params.ReceiverID,
 		params.SenderID,
@@ -117,7 +117,7 @@ func (h *Handler) TransferMoney(ctx *gin.Context) {
 		return
 	}
 
-	ctx.Status(http.StatusOK)
+	ctx.JSON(http.StatusOK, transaction)
 }
 
 func validateDepositRequest(

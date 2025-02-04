@@ -130,13 +130,14 @@ func TestTransfer(t *testing.T) {
 
 	for _, tcase := range cases {
 		t.Run(tcase.Name, func(t *testing.T) {
-			err = srvc.Transfer(
+			tx, err := srvc.Transfer(
 				ctx,
 				tcase.Request.ReceiverID,
 				tcase.Request.SenderID,
 				tcase.Request.Amount)
 
 			require.EqualValues(t, tcase.ExpectedErr, err)
+			fmt.Println(tx)
 		})
 	}
 }

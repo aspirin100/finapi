@@ -29,7 +29,7 @@ type UserManager interface {
 		receiverID,
 		senderID uuid.UUID,
 		amount decimal.Decimal,
-		operation string) error
+		operation string) (*entity.Transaction, error)
 	BeginTx(ctx context.Context) (context.Context, repository.CommitOrRollback, error)
 }
 
@@ -61,7 +61,7 @@ func (s *Service) Deposit(ctx context.Context, userID uuid.UUID, amount decimal.
 		return nil, responseOnRepoError(err)
 	}
 
-	err = s.userManager.SaveTransaction(ctx, userID, userID, amount, operationDeposit)
+	_, err = s.userManager.SaveTransaction(ctx, userID, userID, amount, operationDeposit)
 	if err != nil {
 		return nil, responseOnRepoError(err)
 	}
@@ -79,10 +79,10 @@ func (s *Service) GetTransactions(ctx context.Context,
 	return transactions, nil
 }
 
-func (s *Service) Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) error {
+func (s *Service) Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) (*entity.Transaction, error) {
 	ctx, commitOrRollback, err := s.userManager.BeginTx(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to begin db transaction: %w", err)
+		return nil, fmt.Errorf("failed to begin db transaction: %w", err)
 	}
 
 	defer func() {
@@ -98,7 +98,7 @@ func (s *Service) Transfer(ctx context.Context, receiverID, senderID uuid.UUID, 
 		senderID,
 		decimal.Zero.Sub(amount))
 	if err != nil {
-		return responseOnRepoError(err)
+		return nil, responseOnRepoError(err)
 	}
 	// receiver balance update
 	_, err = s.userManager.UpdateBalance(
@@ -106,15 +106,15 @@ func (s *Service) Transfer(ctx context.Context, receiverID, senderID uuid.UUID, 
 		receiverID,
 		amount)
 	if err != nil {
-		return responseOnRepoError(err)
+		return nil, responseOnRepoError(err)
 	}
 
-	err = s.userManager.SaveTransaction(ctx, receiverID, senderID, amount, operationTransfer)
+	transaction, err := s.userManager.SaveTransaction(ctx, receiverID, senderID, amount, operationTransfer)
 	if err != nil {
-		return responseOnRepoError(err)
+		return nil, responseOnRepoError(err)
 	}
 
-	return nil
+	return transaction, nil
 }
 
 func responseOnRepoError(err error) error {

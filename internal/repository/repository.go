@@ -31,7 +31,7 @@ type Repository struct {
 }
 
 type executor interface {
-	Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error)
+	//Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error)
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 }
 
@@ -142,7 +142,7 @@ func (r *Repository) UpdateBalance(ctx context.Context,
 func (r *Repository) SaveTransaction(ctx context.Context,
 	receiverID, senderID uuid.UUID,
 	amount decimal.Decimal,
-	operation string) error {
+	operation string) (*entity.Transaction, error) {
 	var ex executor = r.DB
 
 	// checks if current operation is in transaction
@@ -153,7 +153,7 @@ func (r *Repository) SaveTransaction(ctx context.Context,
 
 	transactionID := uuid.New()
 
-	_, err := ex.Exec(ctx,
+	rows, err := ex.Query(ctx,
 		NewTransactionQuery,
 		transactionID,
 		receiverID,
@@ -161,17 +161,37 @@ func (r *Repository) SaveTransaction(ctx context.Context,
 		amount,
 		operation)
 	if err != nil {
+		return nil, fmt.Errorf("save transaction query error: %w", err)
+	}
+
+	var transaction entity.Transaction
+
+	for rows.Next() {
+		err = rows.Scan(&transaction.CreatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("transactions scanning fail: %w", err)
+		}
+	}
+
+	err = rows.Err()
+	if err != nil {
 		var pgErr *pgconn.PgError
 
 		switch {
 		case errors.As(err, &pgErr) && pgErr.Code == "23503":
-			return ErrUserNotFound
+			return nil, ErrUserNotFound
 		default:
-			return fmt.Errorf("failed to save transaction: %w", err)
+			return nil, fmt.Errorf("failed to save transaction: %w", err)
 		}
 	}
 
-	return nil
+	transaction.ID = transactionID
+	transaction.ReceiverID = receiverID
+	transaction.SenderID = senderID
+	transaction.Operation = operation
+	transaction.Amount = amount
+
+	return &transaction, nil
 }
 
 func (r *Repository) GetTransactions(ctx context.Context,
@@ -201,7 +221,7 @@ func (r *Repository) GetTransactions(ctx context.Context,
 
 	err = rows.Err()
 	if err != nil {
-		return nil, fmt.Errorf("error during read transaction rows: %w", err)
+		return nil, fmt.Errorf("error during read transactions: %w", err)
 	}
 
 	// for memory optimization
@@ -215,7 +235,8 @@ func (r *Repository) GetTransactions(ctx context.Context,
 const (
 	UpdateBalanceQuery  = `update bank_accounts set balance = (balance + $2) where userID = $1 returning balance`
 	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount, operation)
-	values ($1, $2, $3, $4, $5)`
+	values ($1, $2, $3, $4, $5)
+	returning createdAt`
 	GetTransactionsQuery = `select id, receiverID, senderID, amount, operation, createdAt
 	from transactions
 	where receiverID = $1 OR senderID = $1`

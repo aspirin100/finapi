@@ -120,7 +120,7 @@ func TestSaveTransaction(t *testing.T) {
 
 	for _, tcase := range cases {
 		t.Run(tcase.Name, func(t *testing.T) {
-			err := repo.SaveTransaction(
+			tx, err := repo.SaveTransaction(
 				ctx,
 				tcase.Request.ReceiverID,
 				tcase.Request.SenderID,
@@ -128,6 +128,7 @@ func TestSaveTransaction(t *testing.T) {
 				tcase.Request.Operation)
 
 			require.EqualValues(t, tcase.ExpectedErr, err)
+			fmt.Println(tx)
 		})
 	}
 }
