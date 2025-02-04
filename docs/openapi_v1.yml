@@ -58,7 +58,7 @@ paths:
           schema:
             type: string
             format: uuid
-          example: 3966749e-45d4-460d-8e59-34235672f03b
+          example: 3fec06e9-29cc-4ff4-9ae7-fb0e7c757b61
       requestBody:
         content:
           application/json:
@@ -98,7 +98,7 @@ paths:
           schema:
             type: string
             format: uuid
-          example: 3966749e-45d4-460d-8e59-34235672f03b
+          example: 3fec06e9-29cc-4ff4-9ae7-fb0e7c757b61
       responses:
         '200':
           description: OK

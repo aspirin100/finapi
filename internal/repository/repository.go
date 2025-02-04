@@ -239,7 +239,10 @@ const (
 	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount, operation)
 	values ($1, $2, $3, $4, $5)
 	returning createdAt`
-	GetTransactionsQuery = `select id, receiverID, senderID, amount, operation, createdAt
+	GetTransactionsQuery = `select
+	id, receiverID, senderID, amount, operation, createdAt
 	from transactions
-	where receiverID = $1 OR senderID = $1`
+	where receiverID = $1 OR senderID = $1
+	order by createdAt
+	limit 10`
 )
