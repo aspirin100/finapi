@@ -32,7 +32,7 @@ type transferRequestParams struct {
 }
 
 type TransactionManager interface {
-	Deposit(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) error
+	Deposit(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (*decimal.Decimal, error)
 	GetTransactions(ctx context.Context, userID uuid.UUID) ([]entity.Transaction, error)
 	Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) error
 }
@@ -50,7 +50,7 @@ func New(hostname, port string, tmanager TransactionManager) *Handler {
 	router := gin.Default()
 
 	router.GET("/:userID/transactions", handler.GetUserTransactions)
-	router.PATCH("/:userID/balance", handler.Deposit)
+	router.PATCH("/:userID/deposit", handler.Deposit)
 	router.PATCH("/:userID/transfer", handler.TransferMoney)
 
 	srv := &http.Server{
@@ -86,13 +86,19 @@ func (h *Handler) Deposit(ctx *gin.Context) {
 		responseOnValidationErr(ctx, err)
 	}
 
-	err = h.tmanager.Deposit(ctx, params.UserID, params.Amount)
+	currentBalance, err := h.tmanager.Deposit(ctx, params.UserID, params.Amount)
 	if err != nil {
 		responseOnServiceError(ctx, err)
 		return
 	}
 
-	ctx.Status(http.StatusOK)
+	response := struct {
+		Balance decimal.Decimal `json:"balance"`
+	}{
+		Balance: *currentBalance,
+	}
+
+	ctx.JSON(http.StatusOK, response)
 }
 
 func (h *Handler) TransferMoney(ctx *gin.Context) {

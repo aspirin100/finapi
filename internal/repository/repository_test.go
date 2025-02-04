@@ -67,9 +67,10 @@ func TestUpdateBalance(t *testing.T) {
 
 	for _, tcase := range cases {
 		t.Run(tcase.Name, func(t *testing.T) {
-			err := repo.UpdateBalance(ctx, tcase.Request.UserID, tcase.Request.Amount)
+			balance, err := repo.UpdateBalance(ctx, tcase.Request.UserID, tcase.Request.Amount)
 
 			require.EqualValues(t, tcase.ExpectedErr, err)
+			log.Println("current balance:", balance)
 		})
 	}
 }
@@ -120,7 +121,8 @@ func TestSaveTransaction(t *testing.T) {
 				ctx,
 				tcase.Request.ReceiverID,
 				tcase.Request.SenderID,
-				tcase.Request.Amount)
+				tcase.Request.Amount,
+				"transfer")
 
 			require.EqualValues(t, tcase.ExpectedErr, err)
 		})

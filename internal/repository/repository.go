@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
 	"github.com/shopspring/decimal"
 
@@ -31,6 +32,7 @@ type Repository struct {
 
 type executor interface {
 	Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error)
+	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 }
 
 func NewConnection(ctx context.Context, postgresDSN string) (*Repository, error) {
@@ -94,7 +96,7 @@ func (r *Repository) BeginTx(ctx context.Context) (context.Context, CommitOrRoll
 
 func (r *Repository) UpdateBalance(ctx context.Context,
 	userID uuid.UUID,
-	amount decimal.Decimal) error {
+	amount decimal.Decimal) (*decimal.Decimal, error) {
 	var ex executor = r.DB
 
 	// checks if current operation is in transaction
@@ -103,27 +105,44 @@ func (r *Repository) UpdateBalance(ctx context.Context,
 		ex = *tx
 	}
 
-	comm, err := ex.Exec(ctx,
+	rows, err := ex.Query(ctx,
 		UpdateBalanceQuery, userID, amount)
+	if err != nil {
+		return nil, fmt.Errorf("failed to update user's balance: %w", err)
+	}
+
+	var currentBalance decimal.Decimal
+
+	for rows.Next() {
+		err = rows.Scan(&currentBalance)
+		if err != nil {
+			return nil, fmt.Errorf("failed to read user's balance from db: %w", err)
+		}
+	}
+
+	err = rows.Err()
 	if err != nil {
 		var pgErr *pgconn.PgError
 
 		switch {
 		case errors.As(err, &pgErr) && pgErr.Code == "23514":
-			return ErrNegativeBalance
+			return nil, ErrNegativeBalance
 		default:
-			return fmt.Errorf("failed to update user's balance: %w", err)
+			return nil, fmt.Errorf("update balance query fail: %w", err)
 		}
-	} else if comm.RowsAffected() == 0 {
-		return ErrUserNotFound
 	}
 
-	return nil
+	if rows.CommandTag().RowsAffected() == 0 {
+		return nil, ErrUserNotFound
+	}
+
+	return &currentBalance, nil
 }
 
 func (r *Repository) SaveTransaction(ctx context.Context,
 	receiverID, senderID uuid.UUID,
-	amount decimal.Decimal) error {
+	amount decimal.Decimal,
+	operation string) error {
 	var ex executor = r.DB
 
 	// checks if current operation is in transaction
@@ -174,6 +193,7 @@ func (r *Repository) GetTransactions(ctx context.Context,
 			&transactions[i].ReceiverID,
 			&transactions[i].SenderID,
 			&transactions[i].Amount,
+			&transactions[i].Operation,
 			&transactions[i].CreatedAt,
 		)
 	}
@@ -192,11 +212,10 @@ func (r *Repository) GetTransactions(ctx context.Context,
 }
 
 const (
-	UpdateBalanceQuery  = `update bank_accounts set balance = (balance + $2) where userID = $1`
+	UpdateBalanceQuery  = `update bank_accounts set balance = (balance + $2) where userID = $1 returning balance`
 	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount)
 	values ($1, $2, $3, $4)`
-	GetTransactionsQuery = `select id, receiverID, senderID, amount, createdAt
+	GetTransactionsQuery = `select id, receiverID, senderID, amount, operation, createdAt
 	from transactions
 	where receiverID = $1 OR senderID = $1`
-	GetTransactionsCountQuery = `select count`
 )

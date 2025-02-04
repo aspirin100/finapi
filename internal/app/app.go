@@ -12,6 +12,7 @@ import (
 
 type App struct {
 	requestHandler *handler.Handler
+	repo           *repository.Repository
 }
 
 func New(ctx context.Context, cfg *config.Config) (*App, error) {
@@ -31,6 +32,7 @@ func New(ctx context.Context, cfg *config.Config) (*App, error) {
 
 	return &App{
 		requestHandler: requestHandler,
+		repo:           repo,
 	}, nil
 }
 
@@ -44,5 +46,15 @@ func (app *App) Run() error {
 }
 
 func (app *App) Stop(ctx context.Context) error {
+	err := app.repo.DB.Close(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to close database connection: %w", err)
+	}
+
+	err = app.requestHandler.Server.Shutdown(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to shutdown http server: %w", err)
+	}
+
 	return nil
 }

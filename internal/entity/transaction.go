@@ -12,5 +12,6 @@ type Transaction struct {
 	SenderID   uuid.UUID       `json:"senderID"`
 	ReceiverID uuid.UUID       `json:"receiverID"`
 	Amount     decimal.Decimal `json:"amount"`
+	Operation  string          `json:"operation"`
 	CreatedAt  time.Time       `json:"createdAt"`
 }

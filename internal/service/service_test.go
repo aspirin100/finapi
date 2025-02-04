@@ -69,11 +69,12 @@ func TestDeposit(t *testing.T) {
 
 	for _, tcase := range cases {
 		t.Run(tcase.Name, func(t *testing.T) {
-			err := srvc.Deposit(ctx,
+			balance, err := srvc.Deposit(ctx,
 				tcase.Request.UserID,
 				tcase.Request.Amount)
 
 			require.EqualValues(t, tcase.ExpectedErr, err)
+			log.Println("current balance:", balance)
 		})
 	}
 }
