@@ -24,7 +24,6 @@ services:
       FINAPI_POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/finapi?sslmode=disable
     networks:
         - finapi-local-net
-
-
+        
 networks:
   finapi-local-net:

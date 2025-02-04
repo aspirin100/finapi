@@ -24,6 +24,9 @@ cover:
 		go tool cover -html=coverage.out
 		rm coverage.out
 
+swagger:
+	docker run -d -p 80:8080 -e SWAGGER_JSON=/openapi/openapi_v1.yml -v $(CURDIR):/openapi swaggerapi/swagger-ui
+
 .PHONY: run
 run:
 	docker build -t finapi-img . && \
