@@ -66,7 +66,7 @@ func (s *Service) Transfer(ctx context.Context, receiverID, senderID uuid.UUID, 
 		senderID,
 		decimal.Zero.Sub(amount))
 	if err != nil {
-		responseOnRepoError(err)
+		return responseOnRepoError(err)
 	}
 	// receiver balance update
 	err = s.userManager.UpdateBalance(
@@ -74,12 +74,12 @@ func (s *Service) Transfer(ctx context.Context, receiverID, senderID uuid.UUID, 
 		receiverID,
 		amount)
 	if err != nil {
-		responseOnRepoError(err)
+		return responseOnRepoError(err)
 	}
 
 	err = s.userManager.SaveTransaction(ctx, receiverID, senderID, amount)
 	if err != nil {
-		responseOnRepoError(err)
+		return responseOnRepoError(err)
 	}
 
 	return nil

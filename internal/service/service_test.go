@@ -77,3 +77,65 @@ func TestDeposit(t *testing.T) {
 		})
 	}
 }
+
+func TestTransfer(t *testing.T) {
+	ctx := context.Background()
+
+	srvc, err := initService()
+	if err != nil {
+		log.Print(err)
+		t.Fail()
+	}
+
+	type Params struct {
+		ReceiverID uuid.UUID
+		SenderID   uuid.UUID
+		Amount     decimal.Decimal
+	}
+
+	cases := []struct {
+		Name        string
+		ExpectedErr error
+		Request     Params
+	}{
+		{
+			Name:        "ok case",
+			ExpectedErr: nil,
+			Request: Params{
+				ReceiverID: uuid.MustParse(UserIDs[0]),
+				SenderID:   uuid.MustParse(UserIDs[1]),
+				Amount:     decimal.NewFromFloat32(100),
+			},
+		},
+		{
+			Name:        "user not found case",
+			ExpectedErr: ErrUserNotFound,
+			Request: Params{
+				ReceiverID: uuid.Nil,
+				SenderID:   uuid.MustParse(UserIDs[0]),
+				Amount:     decimal.NewFromFloat32(100),
+			},
+		},
+		{
+			Name:        "negative balance case",
+			ExpectedErr: ErrNegativeBalance,
+			Request: Params{
+				ReceiverID: uuid.MustParse(UserIDs[0]),
+				SenderID:   uuid.MustParse(UserIDs[1]),
+				Amount:     decimal.NewFromFloat32(100000),
+			},
+		},
+	}
+
+	for _, tcase := range cases {
+		t.Run(tcase.Name, func(t *testing.T) {
+			err = srvc.Transfer(
+				ctx,
+				tcase.Request.ReceiverID,
+				tcase.Request.SenderID,
+				tcase.Request.Amount)
+
+			require.EqualValues(t, tcase.ExpectedErr, err)
+		})
+	}
+}
