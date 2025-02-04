@@ -133,7 +133,34 @@ func (r *Repository) SaveTransaction(ctx context.Context,
 
 func (r *Repository) GetTransactions(ctx context.Context,
 	userID uuid.UUID) ([]entity.Transaction, error) {
-	return nil, nil
+	rows, err := r.DB.Query(
+		ctx,
+		GetTransactionsQuery,
+		userID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get users's transactions: %w", err)
+	}
+
+	resultSize := rows.CommandTag().RowsAffected()
+
+	transactions := make([]entity.Transaction, resultSize)
+
+	for i := 0; rows.Next(); i++ {
+		rows.Scan(
+			&transactions[i].ID,
+			&transactions[i].ReceiverID,
+			&transactions[i].SenderID,
+			&transactions[i].Amount,
+			&transactions[i].CreatedAt,
+		)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, fmt.Errorf("error during read transaction rows: %w", err)
+	}
+
+	return transactions, nil
 }
 
 const (

@@ -1,6 +1,8 @@
 package entity
 
 import (
+	"time"
+
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 )
@@ -10,4 +12,5 @@ type Transaction struct {
 	SenderID   uuid.UUID
 	ReceiverID uuid.UUID
 	Amount     decimal.Decimal
+	CreatedAt  time.Time
 }
