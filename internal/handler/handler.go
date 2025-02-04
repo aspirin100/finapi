@@ -17,6 +17,7 @@ import (
 var (
 	ErrInvalidFormat  = errors.New("invalid user id format")
 	ErrNegativeAmount = errors.New("deposit amount must be positive")
+	ErrSameUser       = errors.New("receiver and sender must be different person")
 )
 
 type depositRequestParams struct {
@@ -50,7 +51,7 @@ func New(hostname, port string, tmanager TransactionManager) *Handler {
 
 	router.GET("/:userID/transactions", handler.GetUserTransactions)
 	router.PATCH("/:userID/balance", handler.Deposit)
-	router.PATCH("/transfer", handler.TransferMoney)
+	router.PATCH("/:userID/transfer", handler.TransferMoney)
 
 	srv := &http.Server{
 		Addr:    hostname + ":" + port,
@@ -82,6 +83,7 @@ func (h *Handler) Deposit(ctx *gin.Context) {
 		default:
 			ctx.Status(http.StatusInternalServerError)
 		}
+		return
 	}
 
 	ctx.Status(http.StatusOK)
@@ -102,9 +104,12 @@ func (h *Handler) TransferMoney(ctx *gin.Context) {
 		switch {
 		case errors.Is(err, service.ErrUserNotFound):
 			ctx.String(http.StatusNotFound, "user not found")
+		case errors.Is(err, service.ErrNegativeBalance):
+			ctx.String(http.StatusBadRequest, "not enough money on balance")
 		default:
 			ctx.Status(http.StatusInternalServerError)
 		}
+		return
 	}
 
 	ctx.Status(http.StatusOK)
@@ -158,6 +163,10 @@ func validateTransferRequest(
 		return nil, ErrInvalidFormat
 	}
 
+	if receiverIDParsed == senderIDParsed {
+		return nil, ErrSameUser
+	}
+
 	if decimal.Zero.Compare(params.Amount) >= 0 {
 		return nil, ErrNegativeAmount
 	}
@@ -175,6 +184,8 @@ func responseOnValidationErr(ctx *gin.Context, err error) {
 		ctx.String(http.StatusBadRequest, "wrong user id format")
 	case errors.Is(err, ErrNegativeAmount):
 		ctx.String(http.StatusBadRequest, "amount must be positive")
+	case errors.Is(err, ErrSameUser):
+		ctx.String(http.StatusBadRequest, "can't transfer money to the same account")
 	default:
 		ctx.Status(http.StatusInternalServerError)
 	}
