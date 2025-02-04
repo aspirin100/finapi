@@ -27,7 +27,7 @@ type depositRequestParams struct {
 
 type transferRequestParams struct {
 	SenderID   uuid.UUID       `json:"omitempty"`
-	ReceiverID uuid.UUID       `json:"receiverID"`
+	ReceiverID uuid.UUID       `json:"receiverID"` //nolint:tagliatelle
 	Amount     decimal.Decimal `json:"amount"`
 }
 
@@ -53,7 +53,7 @@ func New(hostname, port string, tmanager TransactionManager) *Handler {
 	router.PATCH("/:userID/deposit", handler.Deposit)
 	router.PATCH("/:userID/transfer", handler.TransferMoney)
 
-	srv := &http.Server{
+	srv := &http.Server{ //nolint:gosec
 		Addr:    hostname + ":" + port,
 		Handler: router,
 	}
@@ -74,6 +74,7 @@ func (h *Handler) GetUserTransactions(ctx *gin.Context) {
 		userIDarsed)
 	if err != nil {
 		responseOnServiceError(ctx, err)
+
 		return
 	}
 
@@ -89,6 +90,7 @@ func (h *Handler) Deposit(ctx *gin.Context) {
 	currentBalance, err := h.tmanager.Deposit(ctx, params.UserID, params.Amount)
 	if err != nil {
 		responseOnServiceError(ctx, err)
+
 		return
 	}
 
@@ -114,6 +116,7 @@ func (h *Handler) TransferMoney(ctx *gin.Context) {
 		params.Amount)
 	if err != nil {
 		responseOnServiceError(ctx, err)
+
 		return
 	}
 

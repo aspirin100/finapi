@@ -79,7 +79,10 @@ func (s *Service) GetTransactions(ctx context.Context,
 	return transactions, nil
 }
 
-func (s *Service) Transfer(ctx context.Context, receiverID, senderID uuid.UUID, amount decimal.Decimal) (*entity.Transaction, error) {
+func (s *Service) Transfer(ctx context.Context,
+	receiverID,
+	senderID uuid.UUID,
+	amount decimal.Decimal) (*entity.Transaction, error) {
 	ctx, commitOrRollback, err := s.userManager.BeginTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin db transaction: %w", err)

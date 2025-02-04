@@ -1,4 +1,4 @@
-package repository
+package repository_test
 
 import (
 	"context"
@@ -6,6 +6,7 @@ import (
 	"log"
 	"testing"
 
+	"github.com/aspirin100/finapi/internal/repository"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
@@ -23,7 +24,7 @@ var UserIDs []string = []string{
 func TestUpdateBalance(t *testing.T) {
 	ctx := context.Background()
 
-	repo, err := NewConnection(ctx, PostgresDSN)
+	repo, err := repository.NewConnection(ctx, PostgresDSN)
 	if err != nil {
 		log.Print(err)
 		t.Fail()
@@ -49,7 +50,7 @@ func TestUpdateBalance(t *testing.T) {
 		},
 		{
 			Name:        "user not found",
-			ExpectedErr: ErrUserNotFound,
+			ExpectedErr: repository.ErrUserNotFound,
 			Request: Params{
 				UserID: uuid.Nil,
 				Amount: decimal.NewFromFloat(1111),
@@ -57,7 +58,7 @@ func TestUpdateBalance(t *testing.T) {
 		},
 		{
 			Name:        "not enough money case",
-			ExpectedErr: ErrNegativeBalance,
+			ExpectedErr: repository.ErrNegativeBalance,
 			Request: Params{
 				UserID: uuid.MustParse(UserIDs[0]),
 				Amount: decimal.NewFromFloat(-100000),
@@ -78,7 +79,7 @@ func TestUpdateBalance(t *testing.T) {
 func TestSaveTransaction(t *testing.T) {
 	ctx := context.Background()
 
-	repo, err := NewConnection(ctx, PostgresDSN)
+	repo, err := repository.NewConnection(ctx, PostgresDSN)
 	if err != nil {
 		log.Print(err)
 		t.Fail()
@@ -108,7 +109,7 @@ func TestSaveTransaction(t *testing.T) {
 		},
 		{
 			Name:        "user not found",
-			ExpectedErr: ErrUserNotFound,
+			ExpectedErr: repository.ErrUserNotFound,
 			Request: Params{
 				ReceiverID: uuid.Nil,
 				SenderID:   uuid.Nil,
@@ -136,7 +137,7 @@ func TestSaveTransaction(t *testing.T) {
 func TestGetTransactions(t *testing.T) {
 	ctx := context.Background()
 
-	repo, err := NewConnection(ctx, PostgresDSN)
+	repo, err := repository.NewConnection(ctx, PostgresDSN)
 	if err != nil {
 		log.Print(err)
 		t.Fail()

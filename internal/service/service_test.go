@@ -1,4 +1,4 @@
-package service
+package service_test
 
 import (
 	"context"
@@ -7,6 +7,7 @@ import (
 	"testing"
 
 	"github.com/aspirin100/finapi/internal/repository"
+	"github.com/aspirin100/finapi/internal/service"
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/stretchr/testify/require"
@@ -21,13 +22,13 @@ var UserIDs []string = []string{
 	"4178f61f-2ff9-4ab5-afa5-f30dc16e6ad9",
 }
 
-func initService() (*Service, error) {
+func initService() (*service.Service, error) {
 	repo, err := repository.NewConnection(context.Background(), PostgresDSN)
 	if err != nil {
 		return nil, fmt.Errorf("failed to db connect: %w", err)
 	}
 
-	return New(repo), nil
+	return service.New(repo), nil
 }
 
 func TestDeposit(t *testing.T) {
@@ -59,7 +60,7 @@ func TestDeposit(t *testing.T) {
 		},
 		{
 			Name:        "user not found case",
-			ExpectedErr: ErrUserNotFound,
+			ExpectedErr: service.ErrUserNotFound,
 			Request: Params{
 				UserID: uuid.Nil,
 				Amount: decimal.NewFromFloat(100),
@@ -110,7 +111,7 @@ func TestTransfer(t *testing.T) {
 		},
 		{
 			Name:        "user not found case",
-			ExpectedErr: ErrUserNotFound,
+			ExpectedErr: service.ErrUserNotFound,
 			Request: Params{
 				ReceiverID: uuid.Nil,
 				SenderID:   uuid.MustParse(UserIDs[0]),
@@ -119,7 +120,7 @@ func TestTransfer(t *testing.T) {
 		},
 		{
 			Name:        "negative balance case",
-			ExpectedErr: ErrNegativeBalance,
+			ExpectedErr: service.ErrNegativeBalance,
 			Request: Params{
 				ReceiverID: uuid.MustParse(UserIDs[0]),
 				SenderID:   uuid.MustParse(UserIDs[1]),

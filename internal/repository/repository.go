@@ -31,7 +31,6 @@ type Repository struct {
 }
 
 type executor interface {
-	//Exec(ctx context.Context, query string, args ...any) (pgconn.CommandTag, error)
 	Query(ctx context.Context, sql string, args ...any) (pgx.Rows, error)
 }
 
@@ -46,8 +45,8 @@ func NewConnection(ctx context.Context, postgresDSN string) (*Repository, error)
 	}, nil
 }
 
-func (r *Repository) UpMigrations(driver, DSN string) error {
-	db, err := sql.Open(driver, DSN)
+func (r *Repository) UpMigrations(driver, dsn string) error {
+	db, err := sql.Open(driver, dsn)
 	if err != nil {
 		return fmt.Errorf("open database error: %w", err)
 	}
@@ -209,7 +208,7 @@ func (r *Repository) GetTransactions(ctx context.Context,
 	for i := 0; rows.Next(); i++ {
 		transactions = append(transactions, entity.Transaction{})
 
-		rows.Scan(
+		err = rows.Scan(
 			&transactions[i].ID,
 			&transactions[i].ReceiverID,
 			&transactions[i].SenderID,
@@ -217,6 +216,9 @@ func (r *Repository) GetTransactions(ctx context.Context,
 			&transactions[i].Operation,
 			&transactions[i].CreatedAt,
 		)
+		if err != nil {
+			return nil, fmt.Errorf("scanning error: %w", err)
+		}
 	}
 
 	err = rows.Err()
