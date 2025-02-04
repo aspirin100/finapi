@@ -1,11 +1,5 @@
 POSTGRES_DSN := "postgres://postgres:postgres@localhost:5432/finapi?sslmode=disable"
 
-.PHONY: run
-run:
-	go run ./cmd/server/main.go
-
-DEFAULT_GOAL: run
-
 build:
 	mkdir -p bin && \
 	go build -o ./bin/finapi-server ./cmd/server/main.go
@@ -22,6 +16,7 @@ goose-down:
 	go run github.com/pressly/goose/v3/cmd/goose@latest \
 	-dir ./internal/repository/migrations postgres $(POSTGRES_DSN) down
 
-docker-run:
+.PHONY: run
+run:
 	docker build -t finapi-img . && \
 	docker-compose up -d
