@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"sync"
 	"testing"
 
 	"github.com/aspirin100/finapi/internal/repository"
@@ -67,46 +66,47 @@ func TestUpdateBalance(t *testing.T) {
 		},
 	}
 
-	wg := sync.WaitGroup{}
+	//wg := sync.WaitGroup{}
 
-	ctx, cor, err := repo.BeginTx(ctx)
-	if err != nil {
-		log.Println(err)
-		t.Fail()
-	}
+	// for i := 0; i < 10000; i++ {
+	// 	wg.Add(1)
+	// 	go func() {
+	// 		defer wg.Done()
 
-	for i := 0; i < 2; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-			defer func() {
-				err = cor(err)
-				if err != nil {
-					log.Println(err)
-					t.Fail()
-				}
-			}()
+	// 		ctx, cor, err := repo.BeginTx(ctx)
+	// 		if err != nil {
+	// 			log.Println(err)
+	// 			t.Fail()
+	// 		}
 
-			_, err = repo.UpdateBalance(ctx,
-				cases[0].Request.UserID,
-				cases[0].Request.Amount)
-			if err != nil {
-				log.Println(err)
-			}
+	// 		defer func() {
+	// 			err = cor(err)
+	// 			if err != nil {
+	// 				log.Println(err)
+	// 				t.Fail()
+	// 			}
+	// 		}()
 
-		}()
-	}
+	// 		_, err = repo.UpdateBalance(ctx,
+	// 			cases[0].Request.UserID,
+	// 			cases[0].Request.Amount)
+	// 		if err != nil {
+	// 			log.Println(err)
+	// 		}
 
-	wg.Wait()
-
-	// for _, tcase := range cases {
-	// 	t.Run(tcase.Name, func(t *testing.T) {
-	// 		balance, err := repo.UpdateBalance(ctx, tcase.Request.UserID, tcase.Request.Amount)
-
-	// 		require.EqualValues(t, tcase.ExpectedErr, err)
-	// 		log.Println("current balance:", balance)
-	// 	})
+	// 	}()
 	// }
+
+	// wg.Wait()
+
+	for _, tcase := range cases {
+		t.Run(tcase.Name, func(t *testing.T) {
+			balance, err := repo.UpdateBalance(ctx, tcase.Request.UserID, tcase.Request.Amount)
+
+			require.EqualValues(t, tcase.ExpectedErr, err)
+			log.Println("current balance:", balance)
+		})
+	}
 }
 
 func TestSaveTransaction(t *testing.T) {

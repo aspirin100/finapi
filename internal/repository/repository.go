@@ -236,18 +236,18 @@ func (r *Repository) checkTx(ctx context.Context) executor {
 }
 
 const (
-	//UpdateBalanceQuery = `update bank_accounts set balance = (balance + $2) where userID = $1 returning balance`
-	UpdateBalanceQuery = `
-	UPDATE bank_accounts
-	SET balance = t.new_balance
-	FROM (
-		SELECT userid, balance + $2 AS new_balance
-		FROM bank_accounts
-		WHERE userid = $1
-		FOR UPDATE
-	) AS t
-	WHERE bank_accounts.userid = t.userid
-	RETURNING bank_accounts.balance;`
+	UpdateBalanceQuery = `update bank_accounts set balance = (balance + $2) where userID = $1 returning balance`
+	// UpdateBalanceQuery = `
+	// UPDATE bank_accounts
+	// SET balance = t.new_balance
+	// FROM (
+	// 	SELECT userid, balance + $2 AS new_balance
+	// 	FROM bank_accounts
+	// 	WHERE userid = $1
+	// 	FOR UPDATE
+	// ) AS t
+	// WHERE bank_accounts.userid = t.userid
+	// RETURNING bank_accounts.balance;`
 	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount, operation)
 	values ($1, $2, $3, $4, $5)
 	returning createdAt`
