@@ -11,4 +11,6 @@ FROM alpine:3.20
 
 COPY --from=build /go/src/bin/finapi-server /usr/local/bin/finapi-server
 
+EXPOSE 8080
+
 ENTRYPOINT ["finapi-server"]
