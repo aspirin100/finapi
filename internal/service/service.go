@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
@@ -34,12 +35,18 @@ type UserManager interface {
 }
 
 type Service struct {
-	userManager UserManager
+	userManager  UserManager
+	readTimeout  time.Duration
+	writeTimeout time.Duration
 }
 
-func New(userManager UserManager) *Service {
+func New(readTimeout,
+	writeTimeout time.Duration,
+	userManager UserManager) *Service {
 	return &Service{
 		userManager: userManager,
+		readTimeout: readTimeout,
+		writeTimeout: writeTimeout,
 	}
 }
 

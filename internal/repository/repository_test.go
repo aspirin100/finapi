@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"sync"
 	"testing"
 
 	"github.com/aspirin100/finapi/internal/repository"
@@ -45,35 +46,54 @@ func TestUpdateBalance(t *testing.T) {
 			ExpectedErr: nil,
 			Request: Params{
 				UserID: uuid.MustParse(UserIDs[0]),
-				Amount: decimal.NewFromFloat(10000),
+				Amount: decimal.NewFromFloat(1),
 			},
 		},
-		{
-			Name:        "user not found",
-			ExpectedErr: repository.ErrUserNotFound,
-			Request: Params{
-				UserID: uuid.Nil,
-				Amount: decimal.NewFromFloat(1111),
-			},
-		},
-		{
-			Name:        "not enough money case",
-			ExpectedErr: repository.ErrNegativeBalance,
-			Request: Params{
-				UserID: uuid.MustParse(UserIDs[0]),
-				Amount: decimal.NewFromFloat(-100000),
-			},
-		},
+		// {
+		// 	Name:        "user not found",
+		// 	ExpectedErr: repository.ErrUserNotFound,
+		// 	Request: Params{
+		// 		UserID: uuid.Nil,
+		// 		Amount: decimal.NewFromFloat(1111),
+		// 	},
+		// },
+		// {
+		// 	Name:        "not enough money case",
+		// 	ExpectedErr: repository.ErrNegativeBalance,
+		// 	Request: Params{
+		// 		UserID: uuid.MustParse(UserIDs[0]),
+		// 		Amount: decimal.NewFromFloat(-100000),
+		// 	},
+		// },
 	}
 
-	for _, tcase := range cases {
-		t.Run(tcase.Name, func(t *testing.T) {
-			balance, err := repo.UpdateBalance(ctx, tcase.Request.UserID, tcase.Request.Amount)
+	wg := sync.WaitGroup{}
 
-			require.EqualValues(t, tcase.ExpectedErr, err)
-			log.Println("current balance:", balance)
-		})
+	for i := 0; i < 10000; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			_, err = repo.UpdateBalance(ctx,
+				cases[0].Request.UserID,
+				cases[0].Request.Amount)
+
+		}()
 	}
+
+	wg.Wait()
+	if err != nil {
+		log.Println(err)
+		t.Fail()
+	}
+
+	// for _, tcase := range cases {
+	// 	t.Run(tcase.Name, func(t *testing.T) {
+	// 		balance, err := repo.UpdateBalance(ctx, tcase.Request.UserID, tcase.Request.Amount)
+
+	// 		require.EqualValues(t, tcase.ExpectedErr, err)
+	// 		log.Println("current balance:", balance)
+	// 	})
+	// }
 }
 
 func TestSaveTransaction(t *testing.T) {

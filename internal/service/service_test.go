@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/aspirin100/finapi/internal/repository"
 	"github.com/aspirin100/finapi/internal/service"
@@ -14,7 +15,8 @@ import (
 )
 
 const (
-	PostgresDSN = "postgres://postgres:postgres@localhost:5432/finapi?sslmode=disable"
+	PostgresDSN    = "postgres://postgres:postgres@localhost:5432/finapi?sslmode=disable"
+	DefaultTimeout = time.Second * 5
 )
 
 var UserIDs []string = []string{
@@ -28,7 +30,9 @@ func initService() (*service.Service, error) {
 		return nil, fmt.Errorf("failed to db connect: %w", err)
 	}
 
-	return service.New(repo), nil
+	return service.New(DefaultTimeout,
+		DefaultTimeout,
+		repo), nil
 }
 
 func TestDeposit(t *testing.T) {

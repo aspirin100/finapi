@@ -2,7 +2,7 @@ POSTGRES_DSN := "postgres://postgres:postgres@localhost:5432/finapi?sslmode=disa
 
 build:
 	mkdir -p bin && \
-	go build -o ./bin/finapi-server ./cmd/server/main.go
+	go build -o ./bin/finapi-server ./cmd/finapi/main.go
 
 goose-create:
 	go run github.com/pressly/goose/v3/cmd/goose@latest \
