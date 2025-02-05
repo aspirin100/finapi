@@ -2,7 +2,7 @@
 
 ## Requirements:
 - Docker
-- Postman(oprional for tests)
+- Postman/curl(oprional for tests)
 
 ## Run
 
