@@ -68,7 +68,7 @@ var txContextKey = ctxKey{}
 
 func (r *Repository) BeginTx(ctx context.Context) (context.Context, CommitOrRollback, error) {
 	tx, err := r.DB.BeginTx(ctx, pgx.TxOptions{
-		IsoLevel: pgx.ReadCommitted,
+		IsoLevel: pgx.Serializable,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to start transaction: %w", err)
@@ -96,13 +96,7 @@ func (r *Repository) BeginTx(ctx context.Context) (context.Context, CommitOrRoll
 func (r *Repository) UpdateBalance(ctx context.Context,
 	userID uuid.UUID,
 	amount decimal.Decimal) (*decimal.Decimal, error) {
-	var ex executor = r.DB
-
-	// checks if current operation is in transaction
-	tx, ok := ctx.Value(txContextKey).(*pgx.Tx)
-	if ok {
-		ex = *tx
-	}
+	ex := r.checkTx(ctx)
 
 	rows, err := ex.Query(ctx,
 		UpdateBalanceQuery, userID, amount)
@@ -142,13 +136,7 @@ func (r *Repository) SaveTransaction(ctx context.Context,
 	receiverID, senderID uuid.UUID,
 	amount decimal.Decimal,
 	operation string) (*entity.Transaction, error) {
-	var ex executor = r.DB
-
-	// checks if current operation is in transaction
-	tx, ok := ctx.Value(txContextKey).(*pgx.Tx)
-	if ok {
-		ex = *tx
-	}
+	ex := r.checkTx(ctx)
 
 	transactionID := uuid.New()
 
@@ -234,8 +222,32 @@ func (r *Repository) GetTransactions(ctx context.Context,
 	return result, nil
 }
 
+func (r *Repository) checkTx(ctx context.Context) executor {
+	var ex executor = r.DB
+
+	// checks if current operation is in transaction
+	tx, ok := ctx.Value(txContextKey).(pgx.Tx)
+	if ok {
+		ex = tx
+	}
+
+	return ex
+}
+
 const (
-	UpdateBalanceQuery  = `update bank_accounts set balance = (balance + $2) where userID = $1 returning balance`
+	UpdateBalanceQuery = `update bank_accounts set balance = (balance + $2) where userID = $1 returning balance`
+	// UpdateBalanceQuery = `
+	// UPDATE bank_accounts
+	// SET balance = t.new_balance
+	// FROM (
+	// 	SELECT userid, balance + $2 AS new_balance
+	// 	FROM bank_accounts
+	// 	WHERE userid = $1
+	// 	FOR UPDATE  -- This locks the row
+	// ) AS t
+	// WHERE bank_accounts.userid = t.userid
+	// AND t.new_balance >= 0  -- Optional: Prevent negative balance
+	// RETURNING bank_accounts.balance;`
 	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount, operation)
 	values ($1, $2, $3, $4, $5)
 	returning createdAt`
