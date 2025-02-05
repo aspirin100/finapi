@@ -135,9 +135,9 @@ func TestSaveTransaction(t *testing.T) {
 			ExpectedErr: nil,
 			Request: Params{
 				ReceiverID: uuid.MustParse(UserIDs[0]),
-				SenderID:   uuid.MustParse(UserIDs[1]),
-				Amount:     decimal.NewFromFloat(10000),
-				Operation:  "transfer",
+				SenderID:   uuid.MustParse(UserIDs[0]),
+				Amount:     decimal.NewFromFloat(1),
+				Operation:  "deposit",
 			},
 		},
 		{
@@ -151,6 +151,27 @@ func TestSaveTransaction(t *testing.T) {
 			},
 		},
 	}
+
+	// wg := sync.WaitGroup{}
+
+	// for i := 0; i < 10000; i++ {
+	// 	wg.Add(1)
+	// 	go func() {
+	// 		defer wg.Done()
+	// 		_, err := repo.SaveTransaction(
+	// 			ctx,
+	// 			cases[0].Request.ReceiverID,
+	// 			cases[0].Request.SenderID,
+	// 			cases[0].Request.Amount,
+	// 			cases[0].Request.Operation)
+	// 		if err != nil {
+	// 			log.Print(err)
+	// 			t.Fail()
+	// 		}
+	// 	}()
+	// }
+
+	// wg.Wait()
 
 	for _, tcase := range cases {
 		t.Run(tcase.Name, func(t *testing.T) {

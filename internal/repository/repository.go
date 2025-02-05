@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"database/sql"
 	"errors"
 	"fmt"
 
@@ -11,11 +10,9 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
-	"github.com/pressly/goose/v3"
 	"github.com/shopspring/decimal"
 
 	"github.com/aspirin100/finapi/internal/entity"
-	"github.com/aspirin100/finapi/internal/repository/migrations"
 )
 
 const (
@@ -44,22 +41,6 @@ func NewConnection(ctx context.Context, postgresDSN string) (*Repository, error)
 	return &Repository{
 		DB: conn,
 	}, nil
-}
-
-func (r *Repository) UpMigrations(driver, dsn string) error {
-	db, err := sql.Open(driver, dsn)
-	if err != nil {
-		return fmt.Errorf("open database error: %w", err)
-	}
-
-	goose.SetBaseFS(migrations.Migrations)
-
-	err = goose.Up(db, ".")
-	if err != nil {
-		return fmt.Errorf("migrations up error: %w", err)
-	}
-
-	return nil
 }
 
 type ctxKey struct{}

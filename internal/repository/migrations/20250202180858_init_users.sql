@@ -21,6 +21,9 @@ alter table transactions
 alter table transactions
     add constraint fk_sender_id
     foreign key (senderID) references bank_accounts(userID);
+
+CREATE INDEX if not exists senderid_index ON transactions USING hash ("senderid");
+CREATE INDEX if not exists receiverid_index ON transactions USING hash ("receiverid");
 -- +goose StatementEnd
 
 -- +goose Down
