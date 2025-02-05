@@ -35,22 +35,22 @@ type UserManager interface {
 }
 
 type Service struct {
-	userManager  UserManager
-	readTimeout  time.Duration
-	writeTimeout time.Duration
+	userManager UserManager
+	timeout     time.Duration
 }
 
-func New(readTimeout,
-	writeTimeout time.Duration,
+func New(timeout time.Duration,
 	userManager UserManager) *Service {
 	return &Service{
 		userManager: userManager,
-		readTimeout: readTimeout,
-		writeTimeout: writeTimeout,
+		timeout:     timeout,
 	}
 }
 
 func (s *Service) Deposit(ctx context.Context, userID uuid.UUID, amount decimal.Decimal) (*decimal.Decimal, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
 	ctx, commitOrRollback, err := s.userManager.BeginTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin bd transaction: %w", err)
@@ -78,6 +78,9 @@ func (s *Service) Deposit(ctx context.Context, userID uuid.UUID, amount decimal.
 
 func (s *Service) GetTransactions(ctx context.Context,
 	userID uuid.UUID) ([]entity.Transaction, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
 	transactions, err := s.userManager.GetTransactions(ctx, userID)
 	if err != nil {
 		return nil, responseOnRepoError(err)
@@ -90,6 +93,9 @@ func (s *Service) Transfer(ctx context.Context,
 	receiverID,
 	senderID uuid.UUID,
 	amount decimal.Decimal) (*entity.Transaction, error) {
+	ctx, cancel := context.WithTimeout(ctx, s.timeout)
+	defer cancel()
+
 	ctx, commitOrRollback, err := s.userManager.BeginTx(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to begin db transaction: %w", err)

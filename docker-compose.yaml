@@ -22,8 +22,7 @@ services:
       FINAPI_HOSTNAME: 0.0.0.0
       FINAPI_PORT: 8080
       FINAPI_POSTGRES_DSN: postgres://postgres:postgres@postgres:5432/finapi?sslmode=disable
-      FINAPI_DB_READ_TIMEOUT: 5s
-      FINAPI_DB_WRITE_TIMEOUT: 5s
+      FINAPI_DB_TIMEOUT: 5s
     networks:
         - finapi-local-net
         

@@ -26,7 +26,7 @@ func New(ctx context.Context, cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to up migrations: %w", err)
 	}
 
-	srvc := service.New(cfg.ReadTimeout, cfg.WriteTimeout, repo)
+	srvc := service.New(cfg.Timeout, repo)
 
 	requestHandler := handler.New(cfg.Hostname, cfg.Port, srvc)
 

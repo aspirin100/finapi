@@ -30,7 +30,7 @@ func initService() (*service.Service, error) {
 		return nil, fmt.Errorf("failed to db connect: %w", err)
 	}
 
-	return service.New(DefaultTimeout,
+	return service.New(
 		DefaultTimeout,
 		repo), nil
 }
