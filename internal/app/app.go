@@ -21,11 +21,6 @@ func New(ctx context.Context, cfg *config.Config) (*App, error) {
 		return nil, fmt.Errorf("failed to create app instance: %w", err)
 	}
 
-	err = repo.UpMigrations("postgres", cfg.PostgresDSN)
-	if err != nil {
-		return nil, fmt.Errorf("failed to up migrations: %w", err)
-	}
-
 	srvc := service.New(cfg.Timeout, repo)
 
 	requestHandler := handler.New(cfg.Hostname, cfg.Port, srvc)
@@ -37,7 +32,7 @@ func New(ctx context.Context, cfg *config.Config) (*App, error) {
 }
 
 func (app *App) Run() error {
-	err := app.requestHandler.Server.ListenAndServe()
+	err := app.requestHandler.Run()
 	if err != nil {
 		return fmt.Errorf("failed to start application: %w", err)
 	}
@@ -48,7 +43,7 @@ func (app *App) Run() error {
 func (app *App) Stop(ctx context.Context) error {
 	app.repo.DB.Close()
 
-	err := app.requestHandler.Server.Shutdown(ctx)
+	err := app.requestHandler.Shutdown(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to shutdown http server: %w", err)
 	}

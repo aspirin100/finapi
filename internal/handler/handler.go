@@ -38,7 +38,7 @@ type TransactionManager interface {
 }
 
 type Handler struct {
-	Server   *http.Server
+	server   *http.Server
 	tmanager TransactionManager
 }
 
@@ -58,9 +58,27 @@ func New(hostname, port string, tmanager TransactionManager) *Handler {
 		Handler: router,
 	}
 
-	handler.Server = srv
+	handler.server = srv
 
 	return handler
+}
+
+func (h *Handler) Run() error {
+	err := h.server.ListenAndServe()
+	if err != nil {
+		return fmt.Errorf("failed to start http server: %w", err)
+	}
+
+	return nil
+}
+
+func (h *Handler) Shutdown(ctx context.Context) error {
+	err := h.server.Shutdown(ctx)
+	if err != nil {
+		return fmt.Errorf("failed to correctly stop http server: %w", err)
+	}
+
+	return nil
 }
 
 func (h *Handler) GetUserTransactions(ctx *gin.Context) {

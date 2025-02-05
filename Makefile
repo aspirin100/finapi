@@ -30,4 +30,5 @@ swagger:
 .PHONY: run
 run:
 	docker build -t finapi-img . && \
-	docker-compose up -d
+	docker-compose up -d && \
+	make goose-up
