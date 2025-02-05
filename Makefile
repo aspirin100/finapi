@@ -4,6 +4,9 @@ build:
 	mkdir -p bin && \
 	go build -o ./bin/finapi-server ./cmd/finapi/main.go
 
+rm-net:
+	docker network rm finapi-local-net
+
 goose-create:
 	go run github.com/pressly/goose/v3/cmd/goose@latest \
 	-dir ./internal/repository/migrations create test_users_add postgres 
