@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	_ "github.com/lib/pq"
 	"github.com/pressly/goose/v3"
 	"github.com/shopspring/decimal"
@@ -27,7 +28,7 @@ var (
 )
 
 type Repository struct {
-	DB *pgx.Conn
+	DB *pgxpool.Pool
 }
 
 type executor interface {
@@ -35,7 +36,7 @@ type executor interface {
 }
 
 func NewConnection(ctx context.Context, postgresDSN string) (*Repository, error) {
-	conn, err := pgx.Connect(ctx, postgresDSN)
+	conn, err := pgxpool.New(ctx, postgresDSN)
 	if err != nil {
 		return nil, fmt.Errorf("failed to connect to postgres: %w", err)
 	}
@@ -68,7 +69,7 @@ var txContextKey = ctxKey{}
 
 func (r *Repository) BeginTx(ctx context.Context) (context.Context, CommitOrRollback, error) {
 	tx, err := r.DB.BeginTx(ctx, pgx.TxOptions{
-		IsoLevel: pgx.Serializable,
+		IsoLevel: pgx.ReadCommitted,
 	})
 	if err != nil {
 		return nil, nil, fmt.Errorf("failed to start transaction: %w", err)
@@ -235,19 +236,18 @@ func (r *Repository) checkTx(ctx context.Context) executor {
 }
 
 const (
-	UpdateBalanceQuery = `update bank_accounts set balance = (balance + $2) where userID = $1 returning balance`
-	// UpdateBalanceQuery = `
-	// UPDATE bank_accounts
-	// SET balance = t.new_balance
-	// FROM (
-	// 	SELECT userid, balance + $2 AS new_balance
-	// 	FROM bank_accounts
-	// 	WHERE userid = $1
-	// 	FOR UPDATE  -- This locks the row
-	// ) AS t
-	// WHERE bank_accounts.userid = t.userid
-	// AND t.new_balance >= 0  -- Optional: Prevent negative balance
-	// RETURNING bank_accounts.balance;`
+	//UpdateBalanceQuery = `update bank_accounts set balance = (balance + $2) where userID = $1 returning balance`
+	UpdateBalanceQuery = `
+	UPDATE bank_accounts
+	SET balance = t.new_balance
+	FROM (
+		SELECT userid, balance + $2 AS new_balance
+		FROM bank_accounts
+		WHERE userid = $1
+		FOR UPDATE
+	) AS t
+	WHERE bank_accounts.userid = t.userid
+	RETURNING bank_accounts.balance;`
 	NewTransactionQuery = `insert into transactions(id, receiverID, senderID, amount, operation)
 	values ($1, $2, $3, $4, $5)
 	returning createdAt`

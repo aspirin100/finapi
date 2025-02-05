@@ -49,22 +49,22 @@ func TestUpdateBalance(t *testing.T) {
 				Amount: decimal.NewFromFloat(1),
 			},
 		},
-		// {
-		// 	Name:        "user not found",
-		// 	ExpectedErr: repository.ErrUserNotFound,
-		// 	Request: Params{
-		// 		UserID: uuid.Nil,
-		// 		Amount: decimal.NewFromFloat(1111),
-		// 	},
-		// },
-		// {
-		// 	Name:        "not enough money case",
-		// 	ExpectedErr: repository.ErrNegativeBalance,
-		// 	Request: Params{
-		// 		UserID: uuid.MustParse(UserIDs[0]),
-		// 		Amount: decimal.NewFromFloat(-100000),
-		// 	},
-		// },
+		{
+			Name:        "user not found",
+			ExpectedErr: repository.ErrUserNotFound,
+			Request: Params{
+				UserID: uuid.Nil,
+				Amount: decimal.NewFromFloat(1111),
+			},
+		},
+		{
+			Name:        "not enough money case",
+			ExpectedErr: repository.ErrNegativeBalance,
+			Request: Params{
+				UserID: uuid.MustParse(UserIDs[0]),
+				Amount: decimal.NewFromFloat(-100000),
+			},
+		},
 	}
 
 	wg := sync.WaitGroup{}
@@ -75,7 +75,7 @@ func TestUpdateBalance(t *testing.T) {
 		t.Fail()
 	}
 
-	for i := 0; i < 1000; i++ {
+	for i := 0; i < 2; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()

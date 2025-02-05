@@ -46,12 +46,9 @@ func (app *App) Run() error {
 }
 
 func (app *App) Stop(ctx context.Context) error {
-	err := app.repo.DB.Close(ctx)
-	if err != nil {
-		return fmt.Errorf("failed to close database connection: %w", err)
-	}
+	app.repo.DB.Close()
 
-	err = app.requestHandler.Server.Shutdown(ctx)
+	err := app.requestHandler.Server.Shutdown(ctx)
 	if err != nil {
 		return fmt.Errorf("failed to shutdown http server: %w", err)
 	}
