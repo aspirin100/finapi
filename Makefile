@@ -25,7 +25,7 @@ cover:
 		rm coverage.out
 
 swagger:
-	docker run -d -p 8090:8080 -e SWAGGER_JSON=/openapi/openapi_v1.yml -v $(CURDIR):/openapi swaggerapi/swagger-ui
+	docker run -d -p 8090:8080 -e SWAGGER_JSON=/openapi/openapi_v1.yml -v $(CURDIR)/docs:/openapi swaggerapi/swagger-ui
 
 migrations-up:
 	go run ./cmd/migrator/main.go \
