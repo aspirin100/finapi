@@ -62,7 +62,7 @@ func (r *Repository) UpMigrations(driver, dsn string) error {
 }
 
 type ctxKey struct{}
-type CommitOrRollback func(err *error) error
+type CommitOrRollback func(err error) error
 
 var txContextKey = ctxKey{}
 
@@ -74,14 +74,14 @@ func (r *Repository) BeginTx(ctx context.Context) (context.Context, CommitOrRoll
 		return nil, nil, fmt.Errorf("failed to start transaction: %w", err)
 	}
 
-	return context.WithValue(ctx, txContextKey, tx), func(err *error) error {
-		if *err != nil {
+	return context.WithValue(ctx, txContextKey, tx), func(err error) error {
+		if err != nil {
 			errRollback := tx.Rollback(ctx)
 			if errRollback != nil {
-				return errors.Join(*err, errRollback)
+				return errors.Join(err, errRollback)
 			}
 
-			return *err
+			return err
 		}
 
 		errCommit := tx.Commit(ctx)

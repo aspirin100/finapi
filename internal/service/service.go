@@ -57,7 +57,7 @@ func (s *Service) Deposit(ctx context.Context, userID uuid.UUID, amount decimal.
 	}
 
 	defer func() {
-		errTx := commitOrRollback(&err)
+		errTx := commitOrRollback(err)
 		if errTx != nil {
 			err = errTx
 		}
@@ -96,7 +96,7 @@ func (s *Service) Transfer(ctx context.Context,
 	}
 
 	defer func() {
-		errTx := commitOrRollback(&err)
+		errTx := commitOrRollback(err)
 		if errTx != nil {
 			err = errTx
 		}
