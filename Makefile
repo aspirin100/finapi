@@ -20,7 +20,7 @@ lint:
 	go run github.com/golangci/golangci-lint/cmd/golangci-lint@latest run
 
 cover:
-		go test -short -race -coverprofile=coverage.out ./... && \
+		go test -race -coverprofile=coverage.out ./... && \
 		go tool cover -html=coverage.out && \
 		rm coverage.out
 
