@@ -1,9 +1,4 @@
 # USAGE
-
-## Requirements:
-- Docker
-- Postman/curl(oprional for tests)
-
 ## Run
 
 ```shell
